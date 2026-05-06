@@ -17,11 +17,11 @@ func NewMemoryStore() *MemoryStore {
 // 首先检查座位是否已经被预订，如果是，则返回 ErrSeatAlreadyBooked 错误
 // 如果座位未被预订，则将预订信息存储在 bookings map 中，并返回 nil 表示成功
 func (s *MemoryStore) Book(b Booking) error {
-	if _, exists := s.bookings[b.SeatId]; exists {
+	if _, exists := s.bookings[b.SeatID]; exists {
 		return ErrSeatAlreadyBooked
 	}
 
-	s.bookings[b.SeatId] = b
+	s.bookings[b.SeatID] = b
 	return nil
 }
 

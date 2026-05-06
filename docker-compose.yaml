@@ -1,0 +1,19 @@
+secrets:
+  redis:
+    container_name: redis
+    image: redis:7
+    ports:
+      - '6379:6379'
+    command: redis-server --appendonly yes --requirepass redhat
+
+  # redis-commander 是 Redis 的 Web 管理界面，方便通过浏览器查看和管理 Redis 数据
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - '8081:8081'
+    user: redis
