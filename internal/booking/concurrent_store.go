@@ -1,6 +1,9 @@
 package booking
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 type ConcurrentStore struct {
 	booking map[string]Booking
@@ -41,4 +44,35 @@ func (s *ConcurrentStore) ListBookings(movieId string) []Booking {
 	}
 
 	return result
+}
+
+func (s *ConcurrentStore) ConfirmSeat(ctx context.Context, sessionId string, userId string) (Booking, error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	// 写入 booking 的状态为 "booked"
+	for seatId, b := range s.booking {
+		if b.ID == sessionId {
+			b.Status = "booked"
+			s.booking[seatId] = b
+			return b, nil
+		}
+	}
+
+	return Booking{}, nil
+}
+
+func (s *ConcurrentStore) ReleaseSeat(ctx context.Context, sessionId string) error {
+	s.Lock()
+	defer s.Unlock()
+
+	// 找到 booking 对应的 seatId，并删除它
+	for seatId, b := range s.booking {
+		if b.ID == sessionId {
+			delete(s.booking, seatId)
+			break
+		}
+	}
+
+	return nil
 }

@@ -1,5 +1,7 @@
 package booking
 
+import "context"
+
 // MemoryStore 是 BookingStore 接口的一个实现
 // GO 不需要显式写 implements，而是只要方法对上了，就自动算实现了
 // BookingStore 需要实现 Booking 和 ListBookings 两个方法
@@ -38,4 +40,27 @@ func (s *MemoryStore) ListBookings(movieId string) []Booking {
 	}
 
 	return result
+}
+
+func (s *MemoryStore) ConfirmSeat(ctx context.Context, sessionId string, userId string) (Booking, error) {
+	// Memory 没有锁直接操作
+	for seatId, b := range s.bookings {
+		if b.ID == sessionId {
+			b.Status = "booked"
+			s.bookings[seatId] = b
+			return b, nil
+		}
+	}
+
+	return Booking{}, nil
+}
+
+func (s *MemoryStore) ReleaseSeat(ctx context.Context, sessionId string) error {
+	for seatId, b := range s.bookings {
+		if b.ID == sessionId {
+			delete(s.bookings, seatId)
+			return nil
+		}
+	}
+	return nil
 }
