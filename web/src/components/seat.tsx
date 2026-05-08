@@ -1,5 +1,6 @@
 'use client'
 
+import { copy } from '@/lib/i18n'
 import { Seat as SeatType } from '@/types/booking'
 import { cn } from '@/lib/utils'
 
@@ -23,22 +24,22 @@ export function Seat({ seat, isSelected, onSelect }: SeatProps) {
         'flex items-center justify-center',
         'focus:outline-none',
         isAvailable && !isSelected && [
-          'bg-[#2b3139] text-[#eaecef] hover:bg-[#3a4150]',
+          'bg-secondary text-foreground hover:bg-accent',
           'cursor-pointer',
         ],
         isAvailable && isSelected && [
-          'bg-[#fcd535] text-[#181a20]',
-          'cursor-pointer ring-2 ring-[#fcd535]/50',
+          'bg-primary text-primary-foreground',
+          'cursor-pointer ring-2 ring-ring',
         ],
-        isHeld && 'bg-[#707a8a] text-[#181a20] cursor-not-allowed opacity-60',
-        isBooked && 'bg-[#f6465d]/20 text-[#f6465d] cursor-not-allowed'
+        isHeld && 'bg-text-muted text-primary-foreground cursor-not-allowed opacity-60',
+        isBooked && 'bg-danger-soft text-danger cursor-not-allowed'
       )}
       title={
         isBooked
-          ? `Seat ${seat.id} - Booked`
+          ? `${copy.booking.seatLabel} ${seat.id} - ${copy.seatStatus.booked}`
           : isHeld
-            ? `Seat ${seat.id} - Held by another user`
-            : `Seat ${seat.id} - Available`
+            ? `${copy.booking.seatLabel} ${seat.id} - ${copy.seatStatus.held}`
+            : `${copy.booking.seatLabel} ${seat.id} - ${copy.seatStatus.available}`
       }
     >
       {seat.number}

@@ -8,9 +8,10 @@ import (
 	goredis "github.com/go-redis/redis/v8"
 )
 
-func NewClient(ctx context.Context, addr string) (*goredis.Client, error) {
+func NewClient(ctx context.Context, addr string, password string) (*goredis.Client, error) {
 	rdb := goredis.NewClient(&goredis.Options{
-		Addr: addr,
+		Addr:     addr,
+		Password: password,
 	})
 
 	if err := rdb.Ping(ctx).Err(); err != nil {

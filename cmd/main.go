@@ -5,9 +5,14 @@ import (
 	bookingservice "cinema-seat-booking/internal/booking/service"
 	bookinghttp "cinema-seat-booking/internal/booking/transport/http"
 	"cinema-seat-booking/internal/httpx"
+	"cinema-seat-booking/utils"
 	"context"
+	"errors"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type movieResponse struct {
@@ -23,11 +28,18 @@ var movies = []movieResponse{
 }
 
 func main() {
+	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Fatalf("load .env: %v", err)
+	}
+
 	// ServeMux 是 Go 官方自带的轻量路由器
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /movies", listMovies)
 
-	rdb, err := redis.NewClient(context.Background(), "localhost:6379")
+	addr := utils.GetEnv("REDIS_ADDR", "localhost:6379")
+	password := utils.GetEnv("REDIS_PASSWORD", "")
+
+	rdb, err := redis.NewClient(context.Background(), addr, password)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,6 +53,8 @@ func main() {
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println("Server is running on http://localhost:8080")
 }
 
 // t 是客户端请求的数据

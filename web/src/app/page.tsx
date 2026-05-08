@@ -12,6 +12,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { confirmSession, holdSeat, listSeats, releaseSession } from '@/lib/api'
+import { copy } from '@/lib/i18n'
 import { generateSeats, movie } from '@/lib/mock-data'
 import { Seat } from '@/types/booking'
 import { useCallback, useEffect, useState } from 'react'
@@ -128,16 +129,16 @@ export default function BookingPage() {
   }, [selectedSeat, sessionId, resetBookingState])
 
   return (
-    <div className="min-h-screen bg-[#0b0e11]">
+    <div className="app-shell">
       {/* Header */}
-      <header className="border-b border-[#2b3139]">
+      <header className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-[#fcd535]">CinemaBooking</h1>
+          <h1 className="text-xl font-bold text-primary">{copy.brand}</h1>
           <nav className="flex items-center gap-6">
-            <span className="text-sm text-[#707a8a]">Movies</span>
-            <span className="text-sm text-[#707a8a]">My Bookings</span>
-            <div className="w-8 h-8 rounded-full bg-[#2b3139] flex items-center justify-center">
-              <span className="text-xs text-[#eaecef]">U</span>
+            <span className="text-sm text-muted-foreground">{copy.navigation.movies}</span>
+            <span className="text-sm text-muted-foreground">{copy.navigation.bookings}</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
+              <span className="text-xs text-foreground">U</span>
             </div>
           </nav>
         </div>
@@ -147,10 +148,10 @@ export default function BookingPage() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Movie Info */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-[#eaecef] mb-2">
+          <h2 className="mb-2 text-2xl font-bold text-foreground">
             {movie.title}
           </h2>
-          <div className="flex items-center gap-4 text-sm text-[#707a8a]">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>{movie.showTime}</span>
             <span>•</span>
             <span>{movie.screen}</span>
@@ -161,7 +162,7 @@ export default function BookingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Seat Selection */}
           <div className="lg:col-span-2">
-            <div className={`bg-[#1e2329] rounded-xl p-6 transition-opacity ${isHolding ? 'opacity-60 pointer-events-none' : ''}`}>
+            <div className={`app-panel p-6 transition-opacity ${isHolding ? 'pointer-events-none opacity-60' : ''}`}>
               <SeatGrid
                 seats={seats}
                 selectedSeat={selectedSeat}
@@ -183,34 +184,34 @@ export default function BookingPage() {
                 onExpired={handleExpired}
               />
             ) : (
-              <div className="bg-[#1e2329] rounded-xl p-6 text-center">
-                <p className="text-[#707a8a]">
-                  {isHolding ? 'Reserving seat…' : 'Select a seat to begin booking'}
+              <div className="app-panel p-6 text-center">
+                <p className="text-muted-foreground">
+                  {isHolding ? copy.booking.loadingSeat : copy.booking.emptyState}
                 </p>
               </div>
             )}
 
             {/* Summary */}
-            <div className="bg-[#1e2329] rounded-xl p-6">
-              <h3 className="text-sm font-medium text-[#707a8a] mb-3">
-                Booking Summary
+            <div className="app-panel p-6">
+              <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+                {copy.booking.summaryTitle}
               </h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#707a8a]">Available</span>
-                  <span className="text-[#0ecb81]">
+                  <span className="text-muted-foreground">{copy.booking.available}</span>
+                  <span className="text-success">
                     {seats.filter((s) => s.status === 'available').length}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#707a8a]">Held</span>
-                  <span className="text-[#fcd535]">
+                  <span className="text-muted-foreground">{copy.booking.held}</span>
+                  <span className="text-warning">
                     {seats.filter((s) => s.status === 'held').length}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-[#707a8a]">Booked</span>
-                  <span className="text-[#f6465d]">
+                  <span className="text-muted-foreground">{copy.booking.booked}</span>
+                  <span className="text-danger">
                     {seats.filter((s) => s.status === 'booked').length}
                   </span>
                 </div>
@@ -222,18 +223,18 @@ export default function BookingPage() {
 
       {/* Success Alert */}
       <AlertDialog open={alertType === 'success'} onOpenChange={() => setAlertType(null)}>
-        <AlertDialogContent className="bg-[#1e2329] border-[#2b3139]">
+        <AlertDialogContent className="app-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#0ecb81]">
-              Booking Confirmed!
+            <AlertDialogTitle className="text-success">
+              {copy.alerts.successTitle}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[#707a8a]">
-              Your seat has been successfully booked. Enjoy the movie!
+            <AlertDialogDescription className="text-muted-foreground">
+              {copy.alerts.successDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction className="bg-[#fcd535] text-[#181a20] hover:bg-[#f0b90b]">
-              View My Bookings
+            <AlertDialogAction className="bg-primary text-primary-foreground hover:bg-warning-strong">
+              {copy.alerts.successAction}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -241,18 +242,18 @@ export default function BookingPage() {
 
       {/* Taken Alert */}
       <AlertDialog open={alertType === 'taken'} onOpenChange={() => setAlertType(null)}>
-        <AlertDialogContent className="bg-[#1e2329] border-[#2b3139]">
+        <AlertDialogContent className="app-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#f6465d]">
-              Seat No Longer Available
+            <AlertDialogTitle className="text-danger">
+              {copy.alerts.takenTitle}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[#707a8a]">
-              Unfortunately, this seat was booked by another user while you were deciding. Please select another seat.
+            <AlertDialogDescription className="text-muted-foreground">
+              {copy.alerts.takenDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction className="bg-[#2b3139] text-[#eaecef] hover:bg-[#3a4150]">
-              Choose Another Seat
+            <AlertDialogAction className="bg-secondary text-foreground hover:bg-accent">
+              {copy.alerts.takenAction}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -260,18 +261,18 @@ export default function BookingPage() {
 
       {/* Generic Error Alert */}
       <AlertDialog open={alertType === 'error'} onOpenChange={() => setAlertType(null)}>
-        <AlertDialogContent className="bg-[#1e2329] border-[#2b3139]">
+        <AlertDialogContent className="app-dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#f6465d]">
-              Something Went Wrong
+            <AlertDialogTitle className="text-danger">
+              {copy.alerts.errorTitle}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[#707a8a]">
-              Unable to connect to the booking service. Please ensure the backend is running and try again.
+            <AlertDialogDescription className="text-muted-foreground">
+              {copy.alerts.errorDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction className="bg-[#2b3139] text-[#eaecef] hover:bg-[#3a4150]">
-              Dismiss
+            <AlertDialogAction className="bg-secondary text-foreground hover:bg-accent">
+              {copy.alerts.errorAction}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

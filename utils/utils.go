@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 )
 
 func WriteBookingError(w http.ResponseWriter, err error) {
@@ -21,4 +22,13 @@ func WriteBookingError(w http.ResponseWriter, err error) {
 
 	log.Printf("booking handler: %v", err)
 	httpx.WriteError(w, http.StatusInternalServerError, "internal server error")
+}
+
+func GetEnv(key string, fallback string) string {
+	value := os.Getenv(key)
+
+	if value == "" {
+		return fallback
+	}
+	return value
 }

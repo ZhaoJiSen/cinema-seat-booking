@@ -1,0 +1,46 @@
+export const locale = 'zh-CN'
+
+export const copy = {
+  brand: 'CinemaBooking',
+  navigation: {
+    movies: '影片',
+    bookings: '我的订单',
+  },
+  booking: {
+    loadingSeat: '正在锁定座位…',
+    emptyState: '请选择一个座位开始预订',
+    detailsTitle: '订单详情',
+    pending: '待确认',
+    movieLabel: '影片',
+    seatLabel: '座位',
+    screenLabel: '影厅',
+    showTimeLabel: '放映时间',
+    cancel: '取消',
+    confirming: '确认中…',
+    confirm: '确认预订',
+    summaryTitle: '预订概览',
+    available: '可选',
+    selected: '已选',
+    held: '锁定中',
+    booked: '已预订',
+    screen: '银幕',
+    countdownActive: '请在倒计时结束前完成预订',
+    countdownExpired: '锁座已过期',
+  },
+  alerts: {
+    successTitle: '预订成功',
+    successDescription: '您的座位已经预订完成，祝您观影愉快。',
+    successAction: '查看我的订单',
+    takenTitle: '座位已不可用',
+    takenDescription: '该座位在您操作期间已被其他用户预订，请重新选择其他座位。',
+    takenAction: '重新选座',
+    errorTitle: '发生错误',
+    errorDescription: '暂时无法连接预订服务，请确认后端已启动后再试一次。',
+    errorAction: '关闭',
+  },
+  seatStatus: {
+    available: '可选',
+    held: '已被其他用户锁定',
+    booked: '已预订',
+  },
+} as const

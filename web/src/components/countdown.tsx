@@ -1,5 +1,6 @@
 'use client'
 
+import { copy } from '@/lib/i18n'
 import { useEffect, useState } from 'react'
 
 interface CountdownProps {
@@ -28,15 +29,15 @@ export function Countdown({ seconds, onComplete }: CountdownProps) {
   const progress = timeLeft / seconds
 
   const getColor = () => {
-    if (progress > 0.5) return 'text-[#0ecb81]'
-    if (progress > 0.25) return 'text-[#fcd535]'
-    return 'text-[#f6465d]'
+    if (progress > 0.5) return 'text-success'
+    if (progress > 0.25) return 'text-warning'
+    return 'text-danger'
   }
 
   const getBgColor = () => {
-    if (progress > 0.5) return 'bg-[#0ecb81]'
-    if (progress > 0.25) return 'bg-[#fcd535]'
-    return 'bg-[#f6465d]'
+    if (progress > 0.5) return 'bg-success'
+    if (progress > 0.25) return 'bg-warning'
+    return 'bg-danger'
   }
 
   return (
@@ -44,14 +45,14 @@ export function Countdown({ seconds, onComplete }: CountdownProps) {
       <div className={`text-2xl font-bold font-mono ${getColor()}`}>
         {String(minutes).padStart(2, '0')}:{String(secs).padStart(2, '0')}
       </div>
-      <div className="w-full h-1.5 bg-[#2b3139] rounded-full overflow-hidden">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
         <div
           className={`h-full transition-all duration-1000 ${getBgColor()}`}
           style={{ width: `${progress * 100}%` }}
         />
       </div>
-      <p className="text-xs text-[#707a8a]">
-        {timeLeft > 0 ? 'Time remaining to complete booking' : 'Time expired'}
+      <p className="text-xs text-muted-foreground">
+        {timeLeft > 0 ? copy.booking.countdownActive : copy.booking.countdownExpired}
       </p>
     </div>
   )
