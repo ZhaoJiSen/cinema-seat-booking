@@ -17,7 +17,7 @@ export function SeatGrid({ seats, selectedSeat, onSelectSeat }: SeatGridProps) {
     <div className="space-y-6">
       {/* Screen */}
       <div className="relative">
-        <div className="h-2 bg-gradient-to-r from-transparent via-[#fcd535] to-transparent rounded-full opacity-80" />
+        <div className="h-2 bg-linear-to-r from-transparent via-[#fcd535] to-transparent rounded-full opacity-80" />
         <p className="text-center text-xs text-[#707a8a] mt-2 uppercase tracking-widest">
           Screen
         </p>
