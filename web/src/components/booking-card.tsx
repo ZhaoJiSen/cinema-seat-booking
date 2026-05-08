@@ -1,14 +1,17 @@
 'use client'
 
-import { Seat, Movie } from '@/types/booking'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Movie, Seat } from '@/types/booking'
+import { useMemo } from 'react'
 import { Countdown } from './countdown'
 
 interface BookingCardProps {
   seat: Seat
   movie: Movie
+  expiresAt: string
+  isPending?: boolean
   onConfirm: () => void
   onCancel: () => void
   onExpired: () => void
@@ -17,10 +20,17 @@ interface BookingCardProps {
 export function BookingCard({
   seat,
   movie,
+  expiresAt,
+  isPending,
   onConfirm,
   onCancel,
   onExpired,
 }: BookingCardProps) {
+  const secondsRemaining = useMemo(
+    () => Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)),
+    [expiresAt]
+  )
+
   return (
     <Card className="bg-[#1e2329] border-[#2b3139]">
       <CardHeader className="pb-3">
@@ -60,13 +70,14 @@ export function BookingCard({
 
         {/* Countdown */}
         <div className="pt-2">
-          <Countdown seconds={120} onComplete={onExpired} />
+          <Countdown seconds={secondsRemaining} onComplete={onExpired} />
         </div>
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">
           <Button
             onClick={onCancel}
+            disabled={isPending}
             variant="outline"
             className="flex-1 bg-transparent border-[#2b3139] text-[#eaecef] hover:bg-[#3a4150] hover:text-[#eaecef]"
           >
@@ -74,9 +85,10 @@ export function BookingCard({
           </Button>
           <Button
             onClick={onConfirm}
+            disabled={isPending}
             className="flex-1 bg-[#fcd535] text-[#181a20] hover:bg-[#f0b90b]"
           >
-            Confirm Booking
+            {isPending ? 'Confirming…' : 'Confirm Booking'}
           </Button>
         </div>
       </CardContent>

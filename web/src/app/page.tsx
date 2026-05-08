@@ -1,73 +1,131 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { Seat, Movie } from '@/types/booking'
-import { movie, initialSeats } from '@/lib/mock-data'
-import { SeatGrid } from '@/components/seat-grid'
 import { BookingCard } from '@/components/booking-card'
+import { SeatGrid } from '@/components/seat-grid'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { confirmSession, holdSeat, listSeats, releaseSession } from '@/lib/api'
+import { generateSeats, movie } from '@/lib/mock-data'
+import { Seat } from '@/types/booking'
+import { useCallback, useEffect, useState } from 'react'
+
+const USER_ID = 'user-demo'
 
 export default function BookingPage() {
-  const [seats, setSeats] = useState<Seat[]>(initialSeats)
+  const [seats, setSeats] = useState<Seat[]>(generateSeats())
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null)
   const [showBookingCard, setShowBookingCard] = useState(false)
-  const [alertType, setAlertType] = useState<'success' | 'taken' | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [expiresAt, setExpiresAt] = useState<string | null>(null)
+  const [alertType, setAlertType] = useState<'success' | 'taken' | 'error' | null>(null)
+  const [isHolding, setIsHolding] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
+
+  // Load current seat statuses from backend on mount
+  useEffect(() => {
+    listSeats(movie.id)
+      .then((bookedSeats) => {
+        setSeats((prev) =>
+          prev.map((seat) => {
+            const hit = bookedSeats.find((s) => s.seat_id === seat.id)
+            return hit ? { ...seat, status: 'booked' as const } : seat
+          })
+        )
+      })
+      .catch(console.error)
+  }, [])
 
   const handleSelectSeat = useCallback(
-    (seat: Seat) => {
-      setSelectedSeat(seat)
-      setShowBookingCard(true)
+    async (seat: Seat) => {
+      if (isHolding) return
+      setIsHolding(true)
+      try {
+        const result = await holdSeat(movie.id, seat.id, USER_ID)
+        setSeats((prev) =>
+          prev.map((s) =>
+            s.id === seat.id ? { ...s, status: 'held' as const } : s
+          )
+        )
+        setSelectedSeat(seat)
+        setSessionId(result.session_id)
+        setExpiresAt(result.expires_at)
+        setShowBookingCard(true)
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : ''
+        if (message.includes('already booked')) {
+          setSeats((prev) =>
+            prev.map((s) =>
+              s.id === seat.id ? { ...s, status: 'booked' as const } : s
+            )
+          )
+          setAlertType('taken')
+        } else {
+          setAlertType('error')
+        }
+      } finally {
+        setIsHolding(false)
+      }
     },
-    []
+    [isHolding]
   )
 
-  const handleCancel = useCallback(() => {
-    setSelectedSeat(null)
+  const resetBookingState = useCallback((seatStatus: 'available' | 'booked') => {
+    setSelectedSeat((prev) => {
+      if (prev) {
+        setSeats((s) =>
+          s.map((seat) =>
+            seat.id === prev.id ? { ...seat, status: seatStatus } : seat
+          )
+        )
+      }
+      return null
+    })
+    setSessionId(null)
+    setExpiresAt(null)
     setShowBookingCard(false)
   }, [])
 
-  const handleExpired = useCallback(() => {
-    setSelectedSeat(null)
-    setShowBookingCard(false)
-  }, [])
-
-  const handleConfirm = useCallback(() => {
-    if (!selectedSeat) return
-
-    // Simulate API call - 30% chance seat is taken
-    const isTaken = Math.random() < 0.3
-
-    if (isTaken) {
-      setSeats((prev) =>
-        prev.map((s) =>
-          s.id === selectedSeat.id
-            ? { ...s, status: 'booked' as const }
-            : s
-        )
-      )
-      setAlertType('taken')
-    } else {
-      setSeats((prev) =>
-        prev.map((s) =>
-          s.id === selectedSeat.id
-            ? { ...s, status: 'booked' as const }
-            : s
-        )
-      )
-      setAlertType('success')
+  const handleCancel = useCallback(async () => {
+    if (sessionId) {
+      await releaseSession(sessionId).catch(console.error)
     }
+    resetBookingState('available')
+  }, [sessionId, resetBookingState])
 
-    setSelectedSeat(null)
-    setShowBookingCard(false)
-  }, [selectedSeat])
+  const handleExpired = useCallback(async () => {
+    if (sessionId) {
+      await releaseSession(sessionId).catch(console.error)
+    }
+    resetBookingState('available')
+  }, [sessionId, resetBookingState])
+
+  const handleConfirm = useCallback(async () => {
+    if (!selectedSeat || !sessionId) return
+    setIsConfirming(true)
+    try {
+      await confirmSession(sessionId, USER_ID)
+      resetBookingState('booked')
+      setAlertType('success')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : ''
+      if (message.includes('already booked')) {
+        resetBookingState('booked')
+        setAlertType('taken')
+      } else {
+        resetBookingState('available')
+        setAlertType('error')
+      }
+    } finally {
+      setIsConfirming(false)
+    }
+  }, [selectedSeat, sessionId, resetBookingState])
 
   return (
     <div className="min-h-screen bg-[#0b0e11]">
@@ -103,7 +161,7 @@ export default function BookingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Seat Selection */}
           <div className="lg:col-span-2">
-            <div className="bg-[#1e2329] rounded-xl p-6">
+            <div className={`bg-[#1e2329] rounded-xl p-6 transition-opacity ${isHolding ? 'opacity-60 pointer-events-none' : ''}`}>
               <SeatGrid
                 seats={seats}
                 selectedSeat={selectedSeat}
@@ -114,10 +172,12 @@ export default function BookingPage() {
 
           {/* Booking Sidebar */}
           <div className="space-y-4">
-            {showBookingCard && selectedSeat ? (
+            {showBookingCard && selectedSeat && expiresAt ? (
               <BookingCard
                 seat={selectedSeat}
                 movie={movie}
+                expiresAt={expiresAt}
+                isPending={isConfirming}
                 onConfirm={handleConfirm}
                 onCancel={handleCancel}
                 onExpired={handleExpired}
@@ -125,7 +185,7 @@ export default function BookingPage() {
             ) : (
               <div className="bg-[#1e2329] rounded-xl p-6 text-center">
                 <p className="text-[#707a8a]">
-                  Select a seat to begin booking
+                  {isHolding ? 'Reserving seat…' : 'Select a seat to begin booking'}
                 </p>
               </div>
             )}
@@ -193,6 +253,25 @@ export default function BookingPage() {
           <AlertDialogFooter>
             <AlertDialogAction className="bg-[#2b3139] text-[#eaecef] hover:bg-[#3a4150]">
               Choose Another Seat
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Generic Error Alert */}
+      <AlertDialog open={alertType === 'error'} onOpenChange={() => setAlertType(null)}>
+        <AlertDialogContent className="bg-[#1e2329] border-[#2b3139]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[#f6465d]">
+              Something Went Wrong
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[#707a8a]">
+              Unable to connect to the booking service. Please ensure the backend is running and try again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction className="bg-[#2b3139] text-[#eaecef] hover:bg-[#3a4150]">
+              Dismiss
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
